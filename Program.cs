@@ -1,142 +1,182 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-public class Matrix2D
+// ---------------------------------------------------------------------------
+// Базовий абстрактний клас
+// Виконує вимогу ЛР №5: "описати батьківський клас та використати віртуальні методи"
+// ---------------------------------------------------------------------------
+public abstract class Function
 {
-    protected const int SIZE = 3;
+    // Віртуальна властивість для амплітуди (може бути перевизначена)
+    public virtual double Amplitude { get; protected set; }
 
-    private readonly int[,] _data;
-    private static readonly Random _rnd = new Random();
+    // Віртуальний метод для обчислення значення функції в точці x
+    public abstract double Evaluate(double x);
 
-    public Matrix2D()
-    {
-        _data = new int[SIZE, SIZE];
-    }
-
-    public virtual void Input()
-    {
-        Console.WriteLine("Введення матриці 3x3:");
-
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-            {
-                Console.Write($"[{i},{j}] = ");
-                while (!int.TryParse(Console.ReadLine(), out _data[i, j]))
-                    Console.Write("Помилка. Введіть число: ");
-            }
-    }
-
-    public virtual void RandomFill()
-    {
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-                _data[i, j] = _rnd.Next(-50, 51);
-    }
-
+    // Віртуальний метод для виведення інформації про об'єкт
     public virtual void Show()
     {
-        Console.WriteLine("\nМатриця 2D:");
-        for (int i = 0; i < SIZE; i++)
-        {
-            for (int j = 0; j < SIZE; j++)
-                Console.Write($"{_data[i, j],4}");
-            Console.WriteLine();
-        }
-    }
-
-    public virtual int MinElement()
-    {
-        int min = _data[0, 0];
-
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-                if (_data[i, j] < min)
-                    min = _data[i, j];
-
-        return min;
+        Console.Write("Абстрактна функція");
     }
 }
 
-
-public class Matrix3D : Matrix2D
+// ---------------------------------------------------------------------------
+// Похідний клас: Функція Sin(ax + b)
+// Виконує вимогу ЛР №5: "описати похідний клас"
+// ---------------------------------------------------------------------------
+public class SinFunction : Function
 {
-    private readonly int[,,] _data3d;
+    // Поля коефіцієнтів
+    private double A;
+    private double a;
+    private double b;
 
-    public Matrix3D() : base()
+    // Конструктор
+    public SinFunction(double A, double a, double b)
     {
-        _data3d = new int[SIZE, SIZE, SIZE];
+        this.A = A;
+        this.a = a;
+        this.b = b;
+        
+        // Встановлюємо значення властивості базового класу
+        this.Amplitude = Math.Abs(A);
     }
 
-    public override void Input()
+    // Перевизначення (override) віртуального методу Evaluate
+    public override double Evaluate(double x)
     {
-        Console.WriteLine("Введення матриці 3x3x3:");
-
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-                for (int k = 0; k < SIZE; k++)
-                {
-                    Console.Write($"[{i},{j},{k}] = ");
-                    while (!int.TryParse(Console.ReadLine(), out _data3d[i, j, k]))
-                        Console.Write("Помилка. Введіть число: ");
-                }
+        return A * Math.Sin(a * x + b);
     }
 
-    public override void RandomFill()
-    {
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-                for (int k = 0; k < SIZE; k++)
-                    _data3d[i, j, k] = _rnd.Next(-50, 51);
-    }
-
+    // Перевизначення (override) віртуального методу Show
     public override void Show()
     {
-        Console.WriteLine("\nМатриця 3D:");
-        for (int layer = 0; layer < SIZE; layer++)
-        {
-            Console.WriteLine($"Шар Z={layer}:");
-            for (int i = 0; i < SIZE; i++)
-            {
-                for (int j = 0; j < SIZE; j++)
-                    Console.Write($"{_data3d[layer, i, j],4}");
-                Console.WriteLine();
-            }
-            Console.WriteLine();
-        }
-    }
-
-    public override int MinElement()
-    {
-        int min = _data3d[0, 0, 0];
-
-        for (int i = 0; i < SIZE; i++)
-            for (int j = 0; j < SIZE; j++)
-                for (int k = 0; k < SIZE; k++)
-                    if (_data3d[i, j, k] < min)
-                        min = _data3d[i, j, k];
-
-        return min;
+        // Використовуємо інтерполяцію для гарного виводу: y = 5.00 * sin(2.00x + 1.50)
+        Console.WriteLine($"y = {A:F2} * sin({a:F2} * x + {b:F2})  (Амплітуда: {Amplitude:F2})");
     }
 }
 
-
-public class Program
+class Program
 {
-    public static void Main()
+    static void Main(string[] args)
     {
-        // створення двох об'єктів відповідно до умови
-        Matrix2D m2 = new Matrix2D();
-        Matrix2D m3 = new Matrix3D(); // поліморфізм
+        // Налаштування кодування для коректного відображення кирилиці
+        Console.OutputEncoding = Encoding.UTF8;
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
-        Console.WriteLine("Заповнення 2D матриці:");
-        m2.RandomFill();
-        m2.Show();
-        Console.WriteLine($"Мінімум 2D: {m2.MinElement()}");
+        Console.WriteLine("--- Лабораторна робота №5 (Варіант 6) ---");
+        Console.WriteLine("Тема: Віртуальні функції та поліморфізм\n");
 
-        Console.WriteLine("\nЗаповнення 3D матриці:");
-        m3.RandomFill();
-        m3.Show();
-        Console.WriteLine($"Мінімум 3D: {m3.MinElement()}");
+        int n = ReadInt("Введіть кількість функцій (n): ");
 
-        Console.WriteLine("\nГотово.");
+        // Виконання вимоги ЛР №5: "Динамічне створення об’єктів та вказівники на екземпляр класу"
+        // У C# масив об'єктів базового типу Function[] зберігає посилання.
+        Function[] functions = new Function[n];
+
+        // Заповнення масиву
+        for (int i = 0; i < n; i++)
+        {
+            Console.WriteLine($"\nВведення даних для функції №{i + 1}:");
+            double A = ReadDouble("  A = ");
+            double a = ReadDouble("  a = ");
+            double b = ReadDouble("  b = ");
+
+            // Поліморфізм: записуємо об'єкт похідного класу SinFunction у змінну типу Function
+            functions[i] = new SinFunction(A, a, b);
+        }
+
+        Console.WriteLine("\n------------------------------------------------");
+        Console.WriteLine("Список введених функцій:");
+        
+        // Демонстрація поліморфізму: викликаємо метод Show(), який визначено у базовому класі,
+        // але виконається реалізація з похідного класу SinFunction.
+        for (int i = 0; i < n; i++)
+        {
+            Console.Write($"{i + 1}. ");
+            functions[i].Show();
+        }
+
+        // --- Основна логіка завдання (з попередніх вимог) ---
+        
+        // 1. Пошук максимальної амплітуди (використовуючи властивість базового класу)
+        double maxAmp = -1;
+        foreach (var f in functions)
+        {
+            if (f.Amplitude > maxAmp)
+                maxAmp = f.Amplitude;
+        }
+        Console.WriteLine($"\nМаксимальна амплітуда: {maxAmp:F4}");
+
+        // 2. Введення точки X
+        double x = ReadDouble("Введіть значення x для оцінки: ");
+
+        // 3. Пошук найкращої функції серед тих, що мають максимальну амплітуду
+        Function bestFunc = null;
+        double maxVal = double.MinValue;
+        double epsilon = 1e-9;
+        bool found = false;
+
+        Console.WriteLine("\nАналіз значень в точці x:");
+        
+        for (int i = 0; i < n; i++)
+        {
+            // Перевірка на рівність float/double з похибкою
+            if (Math.Abs(functions[i].Amplitude - maxAmp) < epsilon)
+            {
+                // Поліморфний виклик Evaluate(x)
+                double currentVal = functions[i].Evaluate(x);
+                Console.Write($"  Функція №{i + 1}: y({x}) = {currentVal:F4} ... ");
+
+                if (!found || currentVal > maxVal)
+                {
+                    maxVal = currentVal;
+                    bestFunc = functions[i];
+                    found = true;
+                    Console.WriteLine("Новий максимум!");
+                }
+                else
+                {
+                    Console.WriteLine("");
+                }
+            }
+        }
+
+        // Результат
+        Console.WriteLine("------------------------------------------------");
+        if (bestFunc != null)
+        {
+            Console.WriteLine("РЕЗУЛЬТАТ:");
+            Console.WriteLine("Функція з максимальною амплітудою та найбільшим значенням в точці x:");
+            bestFunc.Show(); // Поліморфний виклик
+            Console.WriteLine($"Значення y({x}) = {maxVal:F4}");
+        }
+        else
+        {
+            Console.WriteLine("Функції не знайдено.");
+        }
+
+        Console.ReadKey();
+    }
+
+    // --- Допоміжні методи для зчитування ---
+    static double ReadDouble(string msg)
+    {
+        Console.Write(msg);
+        while (true)
+        {
+            if (double.TryParse(Console.ReadLine().Replace(',', '.'), out double res)) return res;
+            Console.Write("Помилка. Введіть число (напр. 2.5): ");
+        }
+    }
+
+    static int ReadInt(string msg)
+    {
+        Console.Write(msg);
+        while (true)
+        {
+            if (int.TryParse(Console.ReadLine(), out int res) && res > 0) return res;
+            Console.Write("Помилка. Введіть ціле число > 0: ");
+        }
     }
 }
