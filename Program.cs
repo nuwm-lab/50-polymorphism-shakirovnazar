@@ -1,109 +1,114 @@
 using System;
-using System.Text;
 using System.Globalization;
+using System.Text;
 
 namespace MatrixPolymorphism
 {
     /// <summary>
-    /// Базовий абстрактний клас для матриць.
-    /// Виконує вимогу: батьківський клас з віртуальними/абстрактними методами.
+    /// Базовий абстрактний клас.
+    /// Визначає інтерфейс для роботи з матрицями різної вимірності.
     /// </summary>
     public abstract class MatrixBase
     {
         /// <summary>
-        /// Назва типу матриці (для виводу).
+        /// Назва типу структури (для відображення).
         /// </summary>
         public string Name { get; protected set; }
 
         /// <summary>
-        /// Абстрактний метод для обчислення визначника (детермінанта).
-        /// Це основний метод для демонстрації поліморфізму.
-        /// </summary>
-        /// <returns>Значення визначника.</returns>
-        public abstract double CalculateDeterminant();
-
-        /// <summary>
-        /// Віртуальний метод для виведення матриці на екран.
+        /// Віртуальний метод для виведення структури на екран.
         /// </summary>
         public virtual void Display()
         {
-            Console.WriteLine($"--- {Name} ---");
+            Console.WriteLine($"\n--- {Name} ---");
+        }
+
+        /// <summary>
+        /// Абстрактний метод заповнення даними з клавіатури.
+        /// </summary>
+        public abstract void FillFromKeyboard();
+
+        /// <summary>
+        /// Абстрактний метод заповнення випадковими числами.
+        /// </summary>
+        /// <param name="rnd">Екземпляр генератора випадкових чисел.</param>
+        public abstract void FillRandom(Random rnd);
+
+        /// <summary>
+        /// Абстрактний метод пошуку мінімального елемента.
+        /// </summary>
+        /// <returns>Найменше значення в матриці.</returns>
+        public abstract double FindMin();
+
+        // Допоміжний метод для безпечного зчитування double
+        protected double ReadDouble(string prompt)
+        {
+            Console.Write(prompt);
+            while (true)
+            {
+                string input = Console.ReadLine();
+                // Дозволяємо вводити і крапку, і кому
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    input = input.Replace(',', '.');
+                    if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+                    {
+                        return result;
+                    }
+                }
+                Console.Write("Помилка. Введіть число (напр. -5.2): ");
+            }
         }
     }
 
     /// <summary>
-    /// Клас двовимірної квадратної матриці (2x2).
+    /// Клас двовимірної матриці розміром 3x3.
     /// </summary>
     public class Matrix2D : MatrixBase
     {
-        // Приватні поля з використанням конвенції _camelCase
-        private double[,] _data;
+        // Фіксований розмір 3x3 згідно з умовою
+        private readonly double[,] _data = new double[3, 3];
 
-        /// <summary>
-        /// Конструктор матриці 2x2.
-        /// </summary>
         public Matrix2D()
         {
-            Name = "Матриця 2x2";
-            _data = new double[2, 2];
+            Name = "Матриця [3x3]";
         }
 
-        /// <summary>
-        /// Метод для заповнення матриці даними.
-        /// Не віртуальний, специфічний для цього класу.
-        /// </summary>
-        public void Fill(double a11, double a12, double a21, double a22)
+        public override void FillFromKeyboard()
         {
-            _data[0, 0] = a11; _data[0, 1] = a12;
-            _data[1, 0] = a21; _data[1, 1] = a22;
-        }
-
-        /// <summary>
-        /// Обчислення визначника для 2x2: ad - bc.
-        /// </summary>
-        public override double CalculateDeterminant()
-        {
-            return (_data[0, 0] * _data[1, 1]) - (_data[0, 1] * _data[1, 0]);
-        }
-
-        public override void Display()
-        {
-            base.Display();
-            Console.WriteLine($"| {_data[0, 0],6:F2} {_data[0, 1],6:F2} |");
-            Console.WriteLine($"| {_data[1, 0],6:F2} {_data[1, 1],6:F2} |");
-        }
-    }
-
-    /// <summary>
-    /// Клас тривимірної квадратної матриці (3x3).
-    /// </summary>
-    public class Matrix3D : MatrixBase
-    {
-        private double[,] _data;
-
-        public Matrix3D()
-        {
-            Name = "Матриця 3x3";
-            _data = new double[3, 3];
-        }
-
-        public void Fill(double[] values)
-        {
-            if (values.Length < 9) throw new ArgumentException("Need 9 values for 3x3 matrix");
-            int k = 0;
+            Console.WriteLine($"Заповніть {Name} (9 елементів):");
             for (int i = 0; i < 3; i++)
+            {
                 for (int j = 0; j < 3; j++)
-                    _data[i, j] = values[k++];
+                {
+                    _data[i, j] = ReadDouble($"Елемент [{i},{j}]: ");
+                }
+            }
         }
 
-        /// <summary>
-        /// Обчислення визначника для 3x3 (правило трикутника або Саррюса).
-        /// </summary>
-        public override double CalculateDeterminant()
+        public override void FillRandom(Random rnd)
         {
-            return _data[0, 0] * (_data[1, 1] * _data[2, 2] - _data[1, 2] * _data[2, 1]) -
-                   _data[0, 1] * (_data[1, 0] * _data[2, 2] - _data[1, 2] * _data[2, 0]) +
-                   _data[0, 2] * (_data[1, 0] * _data[2, 1] - _data[1, 1] * _data[2, 0]);
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    // Випадкові числа від -10.0 до 10.0
+                    _data[i, j] = Math.Round(rnd.NextDouble() * 20 - 10, 2);
+                }
+            }
+        }
+
+        public override double FindMin()
+        {
+            double min = double.MaxValue;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (_data[i, j] < min) min = _data[i, j];
+                }
+            }
+            return min;
         }
 
         public override void Display()
@@ -111,12 +116,91 @@ namespace MatrixPolymorphism
             base.Display();
             for (int i = 0; i < 3; i++)
             {
-                Console.Write("| ");
+                Console.Write("|");
                 for (int j = 0; j < 3; j++)
                 {
-                    Console.Write($"{_data[i, j],6:F2} ");
+                    Console.Write($"{_data[i, j],7:F2} ");
                 }
                 Console.WriteLine("|");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Клас тривимірної матриці розміром 3x3x3.
+    /// </summary>
+    public class Matrix3D : MatrixBase
+    {
+        // Фіксований розмір 3x3x3 згідно з умовою
+        private readonly double[,,] _data = new double[3, 3, 3];
+
+        public Matrix3D()
+        {
+            Name = "Матриця [3x3x3]";
+        }
+
+        public override void FillFromKeyboard()
+        {
+            Console.WriteLine($"Заповніть {Name} (27 елементів):");
+            for (int z = 0; z < 3; z++)
+            {
+                Console.WriteLine($"Шар (Z) {z}:");
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        _data[z, i, j] = ReadDouble($"  Елемент [{z},{i},{j}]: ");
+                    }
+                }
+            }
+        }
+
+        public override void FillRandom(Random rnd)
+        {
+            for (int z = 0; z < 3; z++)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        _data[z, i, j] = Math.Round(rnd.NextDouble() * 20 - 10, 2);
+                    }
+                }
+            }
+        }
+
+        public override double FindMin()
+        {
+            double min = double.MaxValue;
+            // Прохід по всіх вимірах
+            for (int z = 0; z < 3; z++)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < 3; j++)
+                    {
+                        if (_data[z, i, j] < min) min = _data[z, i, j];
+                    }
+                }
+            }
+            return min;
+        }
+
+        public override void Display()
+        {
+            base.Display();
+            for (int z = 0; z < 3; z++)
+            {
+                Console.WriteLine($"Шар Z={z}:");
+                for (int i = 0; i < 3; i++)
+                {
+                    Console.Write("  |");
+                    for (int j = 0; j < 3; j++)
+                    {
+                        Console.Write($"{_data[z, i, j],7:F2} ");
+                    }
+                    Console.WriteLine("|");
+                }
             }
         }
     }
@@ -125,94 +209,68 @@ namespace MatrixPolymorphism
     {
         static void Main(string[] args)
         {
-            // Налаштування культури один раз для всієї програми (виправлення зауваження №3)
+            // Налаштування виводу
             Console.OutputEncoding = Encoding.UTF8;
-            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture; 
-
-            Console.WriteLine("=== Лабораторна робота №5: Поліморфізм (Матриці) ===");
-
-            int n = ReadInt("Введіть кількість матриць для створення: ");
             
-            // Масив посилань на базовий клас (динамічний поліморфізм)
+            // Єдиний екземпляр Random для всієї програми
+            Random rnd = new Random();
+
+            Console.WriteLine("=== Лабораторна робота №5: Поліморфізм (2D та 3D Матриці) ===");
+
+            int n = ReadInt("Введіть кількість об'єктів для створення: ");
+
+            // Масив посилань на базовий клас (демонстрація поліморфізму)
             MatrixBase[] matrices = new MatrixBase[n];
 
+            // 1. Створення об'єктів
             for (int i = 0; i < n; i++)
             {
-                Console.WriteLine($"\n--- Створення об'єкту №{i + 1} ---");
-                Console.WriteLine("1. Матриця 2x2");
-                Console.WriteLine("2. Матриця 3x3");
+                Console.WriteLine($"\n[Створення об'єкту {i + 1} з {n}]");
+                Console.WriteLine("1. Двовимірна матриця (3x3)");
+                Console.WriteLine("2. Тривимірна матриця (3x3x3)");
                 int type = ReadInt("Виберіть тип (1 або 2): ");
 
+                // Створення конкретного екземпляра
                 if (type == 1)
+                    matrices[i] = new Matrix2D();
+                else
+                    matrices[i] = new Matrix3D();
+
+                // Вибір способу заповнення
+                Console.WriteLine("Спосіб заповнення:");
+                Console.WriteLine("1. Випадкові числа");
+                Console.WriteLine("2. Ввід з клавіатури");
+                int fillType = ReadInt("Ваш вибір (1 або 2): ");
+
+                if (fillType == 1)
                 {
-                    var m2 = new Matrix2D();
-                    Console.WriteLine("Введіть 4 елементи (зліва направо, зверху вниз):");
-                    m2.Fill(ReadDouble("a11: "), ReadDouble("a12: "), 
-                            ReadDouble("a21: "), ReadDouble("a22: "));
-                    matrices[i] = m2;
+                    // Поліморфний виклик FillRandom
+                    matrices[i].FillRandom(rnd);
+                    Console.WriteLine("Заповнено випадковими числами.");
                 }
                 else
                 {
-                    var m3 = new Matrix3D();
-                    Console.WriteLine("Введіть 9 елементів:");
-                    double[] vals = new double[9];
-                    for(int k=0; k<9; k++) vals[k] = ReadDouble($"el_{k+1}: ");
-                    m3.Fill(vals);
-                    matrices[i] = m3;
+                    // Поліморфний виклик FillFromKeyboard
+                    matrices[i].FillFromKeyboard();
                 }
             }
 
-            Console.WriteLine("\n\n=== РЕЗУЛЬТАТИ (Поліморфний виклик методів) ===");
+            Console.WriteLine("\n================ РЕЗУЛЬТАТИ ================");
             
-            // Демонстрація поліморфізму
-            for (int i = 0; i < matrices.Length; i++)
+            // 2. Обробка масиву
+            for (int i = 0; i < n; i++)
             {
-                // Виклик віртуального методу Display()
+                // Поліморфний виклик відображення
                 matrices[i].Display();
 
-                // Виклик абстрактного методу CalculateDeterminant()
-                // Програма сама визначає, яку формулу використати (2x2 чи 3x3)
-                double det = matrices[i].CalculateDeterminant();
-                
-                Console.WriteLine($"Визначник (Determinant): {det:F4}");
-                Console.WriteLine();
+                // Поліморфний виклик пошуку мінімуму
+                double minVal = matrices[i].FindMin();
+
+                Console.WriteLine($"-> Мінімальний елемент: {minVal:F2}");
             }
 
-            Console.WriteLine("Натисніть будь-яку клавішу для виходу...");
-            Console.ReadKey();
-        }
-
-        /// <summary>
-        /// Безпечне зчитування числа double з консолі.
-        /// Враховано зауваження про null та CultureInfo.
-        /// </summary>
-        static double ReadDouble(string prompt)
-        {
-            Console.Write(prompt);
-            while (true)
-            {
-                string? input = Console.ReadLine();
-                
-                // Перевірка на null або порожній рядок
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    Console.Write("Ввід не може бути порожнім. Спробуйте ще раз: ");
-                    continue;
-                }
-
-                // Оскільки CultureInfo.CurrentCulture встановлено в InvariantCulture, 
-                // очікується крапка як роздільник. Replace тут вже не потрібен, 
-                // але користувачі можуть помилково вводити кому.
-                // Для надійності можна замінити кому на крапку:
-                input = input.Replace(',', '.');
-
-                if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
-                {
-                    return result;
-                }
-
-                Console.Write("Помилка! Введіть дійсне число (наприклад, 2.5): ");
-            }
+            Console.WriteLine("\nРоботу завершено. Натисніть Enter...");
+            Console.ReadLine();
         }
 
         /// <summary>
@@ -223,8 +281,8 @@ namespace MatrixPolymorphism
             Console.Write(prompt);
             while (true)
             {
-                string? input = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(input) && int.TryParse(input, out int result))
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int result))
                 {
                     return result;
                 }
